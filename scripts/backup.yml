@@ -1,0 +1,19 @@
+name: Daily Backup
+on:
+  schedule:
+    - cron: '0 2 * * *'
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: npm ci
+      - name: Backup
+        env:
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: npx ts-node scripts/backup.ts
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with: { name: timeledger-backup-${{ github.run_id }}, path: backups/*.json }
