@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { db, initDB } from '../lib/db';
 import type { Session } from '../lib/types';
 import { format, subDays, addDays, startOfDay, isSameDay, parseISO } from 'date-fns';
+import type { Category } from '../lib/types';
 
 export default function Diary() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -9,6 +10,11 @@ export default function Diary() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editCat, setEditCat] = useState('');
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addTask, setAddTask] = useState('');
+  const [addCat, setAddCat] = useState<Category>('productive');
+  const [addStart, setAddStart] = useState<string>(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
+  const [addDurationMin, setAddDurationMin] = useState<number | ''>('');
 
   useEffect(() => { initDB(); load(); }, [selectedDate]);
   async function load() {
@@ -24,6 +30,26 @@ export default function Diary() {
     setEditId(null); load();
   };
   const remove = async (id: string) => { if (confirm('Delete session?')) { await db.sessions.delete(id); await db.ledger.where({ sessionId: id }).delete(); load(); } };
+
+  const saveAdd = async () => {
+    if (!addTask.trim() || !addDurationMin) return;
+    const start = new Date(addStart);
+    const durationSec = +addDurationMin * 60;
+    const end = new Date(start.getTime() + durationSec * 1000);
+    await db.sessions.add({
+      id: crypto.randomUUID(),
+      taskName: addTask.trim(),
+      taskKey: addTask.trim().toLowerCase().replace(/[^a-z0-9\s]/g,'').substring(0,60),
+      startedAt: start,
+      endedAt: end,
+      durationSec,
+      category: addCat,
+      source: 'manual',
+    });
+    setAddModalOpen(false);
+    setAddTask(''); setAddDurationMin(''); setAddStart(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
+    load();
+  };
 
   const prevDay = () => setSelectedDate(format(subDays(parseISO(selectedDate), 1), 'yyyy-MM-dd'));
   const nextDay = () => setSelectedDate(format(addDays(parseISO(selectedDate), 1), 'yyyy-MM-dd'));
@@ -59,6 +85,7 @@ export default function Diary() {
         />
         <button onClick={nextDay} className="text-slate-500 hover:text-white px-2 text-lg">›</button>
         <button onClick={today} className="text-xs bg-[#1a1a1a] hover:bg-[#252525] text-[#f5c97a] px-3 py-1 rounded-full border border-white/[0.06] ml-auto">Today</button>
+        <button onClick={() => setAddModalOpen(true)} className="text-xs bg-amber-500 text-slate-950 px-3 py-1 rounded-full font-bold ml-2">+ Add Session</button>
       </div>
 
       {/* Timeline / schedule */}
@@ -136,6 +163,41 @@ export default function Diary() {
           <div className="mt-4 pt-3 border-t border-white/[0.06] flex justify-between text-xs text-slate-400 font-mono">
             <span>Total time: <b className="text-white">{Math.round(totalSec / 60)}m</b></span>
             <span>Sessions: <b className="text-white">{sessions.length}</b></span>
+          </div>
+        </div>
+      )}
+      {addModalOpen && (
+        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setAddModalOpen(false)}>
+          <div onClick={e => e.stopPropagation()} className="bg-[#0f1115] border border-white/[0.06] rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-white mb-4">Add Past Session</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Task Name</label>
+                <input value={addTask} onChange={e => setAddTask(e.target.value)} className="w-full bg-[#0b0c10] border border-white/[0.08] rounded-lg px-3 py-2 text-white" placeholder="e.g., Woke up, showered..." />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Category</label>
+                <select value={addCat} onChange={e => setAddCat(e.target.value as Category)} className="w-full bg-[#0b0c10] border border-white/[0.08] rounded-lg px-3 py-2 text-white">
+                  <option value="productive">Productive</option>
+                  <option value="unproductive">Unproductive</option>
+                  <option value="sleep">Sleep</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Start Time</label>
+                  <input type="datetime-local" value={addStart} onChange={e => setAddStart(e.target.value)} className="w-full bg-[#0b0c10] border border-white/[0.08] rounded-lg px-3 py-2 text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Duration (minutes)</label>
+                  <input type="number" min="1" value={addDurationMin} onChange={e => setAddDurationMin(Number(e.target.value) || '')} className="w-full bg-[#0b0c10] border border-white/[0.08] rounded-lg px-3 py-2 text-white" placeholder="e.g., 480" />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setAddModalOpen(false)} className="flex-1 py-2 bg-slate-800 rounded-lg font-bold text-sm hover:bg-slate-700">Cancel</button>
+              <button onClick={saveAdd} className="flex-1 py-2 bg-amber-500 text-slate-950 rounded-lg font-extrabold text-sm hover:bg-amber-400">Save</button>
+            </div>
           </div>
         </div>
       )}

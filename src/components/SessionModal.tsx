@@ -12,6 +12,7 @@ export default function SessionModal({ open, onClose, onSave, defaultCategory }:
         <div className="flex gap-3 mb-6">
           <button onClick={() => setCat('productive')} className={`flex-1 py-2 rounded-lg font-bold text-sm border ${cat==='productive' ? 'bg-emerald-500 text-slate-950 border-emerald-500' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>Productive</button>
           <button onClick={() => setCat('unproductive')} className={`flex-1 py-2 rounded-lg font-bold text-sm border ${cat==='unproductive' ? 'bg-rose-500 text-white border-rose-500' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>Unproductive</button>
+          <button onClick={() => setCat('sleep')} className={`flex-1 py-2 rounded-lg font-bold text-sm border ${cat==='sleep' ? 'bg-purple-500 text-white border-purple-500' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>Sleep</button>
         </div>
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-3 bg-slate-800 rounded-xl font-bold text-sm hover:bg-slate-700 transition">Cancel</button>

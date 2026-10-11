@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Header from './components/Header';
 import Stopwatch from './components/Stopwatch';
 import CountdownTimer from './components/CountdownTimer';
+import Timer from './pages/Timer';
 import Dashboard from './pages/Dashboard';
 import Diary from './pages/Diary';
 import Rankings from './pages/Rankings';
@@ -33,8 +34,9 @@ export default function App() {
         {page === 'rankings' && <Rankings />}
         {page === 'settings' && <Settings />}
       </main>
-      <section className="max-w-5xl mx-auto px-4 pb-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <section className="max-w-5xl mx-auto px-4 pb-12 grid grid-cols-1 md:grid-cols-3 gap-6">
         <Stopwatch />
+        <Timer />
         <CountdownTimer />
       </section>
     </div>

@@ -1,5 +1,5 @@
-export type Category = 'productive' | 'unproductive' | 'uncertain';
-export type Source = 'stopwatch' | 'manual';
+export type Category = 'productive' | 'unproductive' | 'uncertain' | 'sleep';
+export type Source = 'stopwatch' | 'manual' | 'timer';
 
 export interface Session {
   id: string;
